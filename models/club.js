@@ -12,8 +12,8 @@ const Club=new mongoose.Schema({
         ref:"Department"
     },
     institute:{
-        type:String,
-        require:true
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Institute"
     },
     cluster:{
         type:mongoose.Schema.Types.ObjectId,

@@ -2,6 +2,10 @@ const Club = require('../models/club');
 const Department=require('../models/Department');
 const Cluster=require('../models/Cluster');
 const mongoose=require('mongoose');
+const Institute=require('../models/Institute');
+
+
+
 
 exports.createClub = async (req, res) => {
   try {
@@ -17,14 +21,16 @@ exports.createClub = async (req, res) => {
 
     const requiredDepartment=await Department.findOne({name:department});
     const requiredCluster=await Cluster.findOne({name:cluster});
+    const requiredInstitute=await Institute.findOne({name:institute});
 
-    if(requiredCluster && requiredDepartment){
+
+    if(requiredCluster && requiredDepartment && requiredInstitute ){
 
 
     const newClub = new Club({
       name,
       department:requiredDepartment._id,
-      institute,
+      institute:requiredInstitute._id,
       cluster:requiredCluster._id,
     });
 
@@ -42,7 +48,7 @@ exports.createClub = async (req, res) => {
   else{
     return res.status(404).json({
         success:false,
-        message:"either cluster or department required is not valid"
+        message:"either cluster or department or institute required is not valid"
     })
   }
   } catch (error) {
@@ -58,7 +64,7 @@ exports.createClub = async (req, res) => {
 exports.findAllClubs = async (req, res) => {
   try {
     
-    const clubs = await Club.find().populate('department cluster');
+    const clubs = await Club.find().populate('department cluster institute');
 
    
     return res.status(200).json({
@@ -75,7 +81,7 @@ exports.findAllClubs = async (req, res) => {
   }
 };
 
-// Find a Club by ID
+
 exports.findClubById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -120,7 +126,7 @@ exports.findClubById = async (req, res) => {
 exports.updateClubById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, institute } = req.body;
+    const { name } = req.body;
 
     const newId=new mongoose.Types.ObjectId(id);
 
@@ -136,19 +142,19 @@ exports.updateClubById = async (req, res) => {
    
 
 
-    if (!name || !institute ) {
+    if (!name  ) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required: name, department, institute, cluster',
+        message: 'All fields are required: name',
       });
     }
 
 
     const updatedClub = await Club.findByIdAndUpdate(
         newId,
-      { name, institute },
+      { name },
       { new: true, runValidators: true } 
-    ).populate('department cluster');
+    ).populate('department cluster institute');
 
 
     if (!updatedClub) {

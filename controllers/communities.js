@@ -1,7 +1,7 @@
 const Communities = require('../models/Communities');
 const Department = require('../models/Department');
 const Cluster = require('../models/Cluster');
-
+const Institute=require('../models/Institute');
 
 exports.createCommunity = async (req, res) => {
   try {
@@ -18,12 +18,12 @@ exports.createCommunity = async (req, res) => {
  
     const requiredDepartment = await Department.findOne({ name: department });
     const requiredCluster = await Cluster.findOne({ name: cluster });
-
+    const requiredInstitute=await Institute.findOne({name:institute});
    
-    if (!requiredDepartment || !requiredCluster) {
+    if (!requiredDepartment || !requiredCluster || !requiredInstitute) {
       return res.status(404).json({
         success: false,
-        message: 'Either the department or cluster is not valid',
+        message: 'Either the department or cluster or institute  is not valid',
       });
     }
 
@@ -31,7 +31,7 @@ exports.createCommunity = async (req, res) => {
     const newCommunity = new Communities({
       name,
       department: requiredDepartment._id,
-      institute,
+      institute:requiredInstitute._id,
       cluster: requiredCluster._id,
     });
 
@@ -59,7 +59,7 @@ exports.findAllCommunities = async (req, res) => {
    
     const communities = await Communities.find()
       .populate('department')
-      .populate('cluster');
+      .populate('cluster').populate('institute');
 
    
     return res.status(200).json({
@@ -84,7 +84,7 @@ exports.findCommunityById = async (req, res) => {
 
     const community = await Communities.findById(id)
       .populate('department')
-      .populate('cluster');
+      .populate('cluster').populate('institute');
 
  
     if (!community) {
@@ -126,12 +126,12 @@ exports.updateCommunityById = async (req, res) => {
    
     const requiredDepartment = await Department.findOne({ name: department });
     const requiredCluster = await Cluster.findOne({ name: cluster });
-
+    const requiredInstitute=await Institute.findOne({name:institute});
     
-    if (!requiredDepartment || !requiredCluster) {
+    if (!requiredDepartment || !requiredCluster || !requiredInstitute) {
       return res.status(404).json({
         success: false,
-        message: 'Either the department or cluster is not valid',
+        message: 'Either the department or cluster or institute is not valid',
       });
     }
 
@@ -141,13 +141,13 @@ exports.updateCommunityById = async (req, res) => {
       {
         name,
         department: requiredDepartment._id,
-        institute,
+        institute:requiredInstitute._id,
         cluster: requiredCluster._id,
       },
       { new: true, runValidators: true } 
     )
       .populate('department')
-      .populate('cluster');
+      .populate('cluster').populate('institute');
 
    
     if (!updatedCommunity) {

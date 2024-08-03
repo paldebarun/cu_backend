@@ -1,8 +1,8 @@
 const ProfessionalSocieties = require('../models/ProfessionalSocieties');
 const Department = require('../models/Department');
 const Cluster = require('../models/Cluster');
-// const mongoose = require('mongoose');
 
+const Institute=require('../models/Institute');
 
 exports.createProfessionalSociety = async (req, res) => {
   try {
@@ -19,11 +19,13 @@ exports.createProfessionalSociety = async (req, res) => {
     
     const requiredDepartment = await Department.findOne({ name: department });
     const requiredCluster = await Cluster.findOne({ name: cluster });
+    const requiredInstitute=await Institute.findOne({name:institute});
 
-    if (!requiredDepartment || !requiredCluster) {
+
+    if (!requiredDepartment || !requiredCluster || !requiredInstitute) {
       return res.status(404).json({
         success: false,
-        message: 'Either the department or cluster is not valid',
+        message: 'Either the department or cluster or institute is not valid',
       });
     }
 
@@ -31,7 +33,7 @@ exports.createProfessionalSociety = async (req, res) => {
     const newSociety = new ProfessionalSocieties({
       name,
       department: requiredDepartment._id,
-      institute,
+      institute:requiredInstitute._id,
       cluster: requiredCluster._id,
     });
 
@@ -59,7 +61,7 @@ exports.findAllProfessionalSocieties = async (req, res) => {
  
     const societies = await ProfessionalSocieties.find()
       .populate('department')
-      .populate('cluster');
+      .populate('cluster').populate('institute');
 
   
     return res.status(200).json({
@@ -86,7 +88,7 @@ exports.findProfessionalSocietyById = async (req, res) => {
    
     const society = await ProfessionalSocieties.findById(id)
       .populate('department')
-      .populate('cluster');
+      .populate('cluster').populate('institute');
 
    
     if (!society) {
@@ -130,11 +132,12 @@ exports.updateProfessionalSocietyById = async (req, res) => {
    
     const requiredDepartment = await Department.findOne({ name: department });
     const requiredCluster = await Cluster.findOne({ name: cluster });
+    const requiredInstitute=await Institute.findOne({name:institute});
 
-    if (!requiredDepartment || !requiredCluster) {
+    if (!requiredDepartment || !requiredCluster || !requiredInstitute) {
       return res.status(404).json({
         success: false,
-        message: 'Either the department or cluster is not valid',
+        message: 'Either the department or cluster or institute  is not valid',
       });
     }
 
@@ -144,13 +147,13 @@ exports.updateProfessionalSocietyById = async (req, res) => {
       {
         name,
         department: requiredDepartment._id,
-        institute,
+        institute:requiredInstitute._id,
         cluster: requiredCluster._id,
       },
       { new: true, runValidators: true } 
     )
       .populate('department')
-      .populate('cluster');
+      .populate('cluster').populate('institute');
 
   
     if (!updatedSociety) {
