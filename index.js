@@ -37,8 +37,14 @@ app.use('/api/proffSocieties',professionalSocietiesRoutes);
 const communitiesRoutes=require('./routes/communitiesRoutes');
 app.use('/api/communitiesRoutes',communitiesRoutes);
 
+const studentRepRoutes=require('./routes/studentRepCreateRoutes');
+app.use('/api/studentRep',studentRepRoutes);
 
+const facultyAdvRoutes=require('./routes/facultyAdvisorRoutes');
+app.use('/api/facultyAdv',facultyAdvRoutes);
 
+const loginRoute=require('./routes/loginRoutes');
+app.use('/api/login',loginRoute);
 
 app.listen(PORT,()=>{
    console.log(`the server is listening at port no: ${PORT}`);
