@@ -1,58 +1,92 @@
 const Club = require('../models/club');
 const Department=require('../models/Department');
-const Cluster=require('../models/Cluster');
+
 const mongoose=require('mongoose');
-const Institute=require('../models/Institute');
-
-
 
 
 exports.createClub = async (req, res) => {
   try {
-    const { name, department, institute, cluster } = req.body;
+    const {
+      ProposedClubName,
+      TypeOfEntity,
+      CategoryOfEntity,
+      ProposedBy,
+      proponentName,
+      proponentDepartment,
+      natureofEntity,
+      proposedFacultyAdvisor1,
+      proposedFacultyAdvisor2,
+      proposedFacultyCoAdvisor1,
+      proposedFacultyCoAdvisor2,
+      proposedStudentRepresentative1,
+      proposedStudentRepresentative2,
+      proposedStudentJointRepresentative1,
+      proposedStudentJointRepresentative2,
+      ProposedDate,
+    } = req.body;
 
-   
-    if (!name || !department || !institute || !cluster) {
+  
+    if (
+      !ProposedClubName ||
+      !TypeOfEntity ||
+      !CategoryOfEntity ||
+      !ProposedBy ||
+      !proponentName ||
+      !natureofEntity ||
+      !proponentDepartment ||
+      !proposedFacultyAdvisor1 ||
+      !proposedFacultyAdvisor2 ||
+      !proposedStudentRepresentative1 ||
+      !proposedStudentRepresentative2 ||
+      !proposedStudentJointRepresentative1||
+      !proposedStudentJointRepresentative2||
+      !proposedFacultyCoAdvisor1||
+      !proposedFacultyCoAdvisor2 ||
+      !ProposedDate 
+     
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required: name, department, institute, cluster',
+        message: 'All fields are required',
       });
     }
 
-    const requiredDepartment=await Department.findOne({name:department});
-    const requiredCluster=await Cluster.findOne({name:cluster});
-    const requiredInstitute=await Institute.findOne({name:institute});
+    const requiredDepartment = await Department.findOne({ name: proponentDepartment });
+    
 
+    if ( requiredDepartment ) {
+      const newClub = new Club({
+        ProposedClubName,
+        TypeOfEntity,
+        CategoryOfEntity,
+        ProposedBy,
+        proponentName,
+        proponentDepartment: requiredDepartment._id,
+        natureofEntity,
+      
+        proposedFacultyAdvisor:[proposedFacultyAdvisor1,proposedFacultyAdvisor2],
+        proposedFacultyCoAdvisor:[proposedFacultyCoAdvisor1,proposedFacultyCoAdvisor2],
+        proposedStudentRepresentative:[proposedStudentRepresentative1,proposedStudentRepresentative2],
+        proposedStudentJointRepresentative:[proposedStudentJointRepresentative1,proposedStudentJointRepresentative2],
+        ProposedDate,
+        
+       
+      });
 
-    if(requiredCluster && requiredDepartment && requiredInstitute ){
+      const savedClub = await newClub.save();
 
-
-    const newClub = new Club({
-      name,
-      department:requiredDepartment._id,
-      institute:requiredInstitute._id,
-      cluster:requiredCluster._id,
-    });
-
-  
-    const savedClub = await newClub.save();
-
-
-    return res.status(201).json({
-      success: true,
-      message: 'Club created successfully',
-      club: savedClub,
-    });
-
-}
-  else{
-    return res.status(404).json({
-        success:false,
-        message:"either cluster or department or institute required is not valid"
-    })
-  }
+      return res.status(201).json({
+        success: true,
+        message: 'Club created successfully',
+        club: savedClub,
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: 'Either department, institute, or cluster is invalid',
+      });
+    }
   } catch (error) {
-   
     return res.status(500).json({
       success: false,
       message: `Error creating club: ${error.message}`,
@@ -61,10 +95,11 @@ exports.createClub = async (req, res) => {
 };
 
 
+
 exports.findAllClubs = async (req, res) => {
   try {
     
-    const clubs = await Club.find().populate('department cluster institute');
+    const clubs = await Club.find().populate('proponentDepartment');
 
    
     return res.status(200).json({
@@ -94,10 +129,7 @@ exports.findClubById = async (req, res) => {
       });
     }
 
-   
-
-
-    const club = await Club.findById(id).populate('department cluster');
+    const club = await Club.findById(id).populate('proponentDepartment');
 
 
     if (!club) {
@@ -126,36 +158,45 @@ exports.findClubById = async (req, res) => {
 exports.updateClubById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
-
-    const newId=new mongoose.Types.ObjectId(id);
-
-
-    if (!newId) {
+    const {
+      ProposedClubName,
+      CategoryOfEntity,
+      proposedFacultyAdvisor1,
+      proposedFacultyAdvisor2,
+      proposedFacultyCoAdvisor1,
+      proposedFacultyCoAdvisor2,
+      proposedStudentRepresentative1,
+      proposedStudentRepresentative2,
+      proposedStudentJointRepresentative1,
+      proposedStudentJointRepresentative2
+    } = req.body;
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: 'Club ID is required',
+        message: 'Invalid Club ID',
       });
     }
 
-
-   
-
-
-    if (!name  ) {
+    if (!ProposedClubName || !CategoryOfEntity || !proposedFacultyAdvisor1 || !proposedFacultyAdvisor2 || !proposedFacultyCoAdvisor1 || !proposedFacultyCoAdvisor2 || !proposedStudentRepresentative1 || !proposedStudentRepresentative2 || !proposedStudentJointRepresentative1 || !proposedStudentJointRepresentative2 ) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required: name',
+        message: 'All fields are required',
       });
     }
-
 
     const updatedClub = await Club.findByIdAndUpdate(
-        newId,
-      { name },
-      { new: true, runValidators: true } 
-    ).populate('department cluster institute');
-
+      id,
+      {
+        ProposedClubName,
+        CategoryOfEntity,
+        proposedFacultyAdvisor: [proposedFacultyAdvisor1, proposedFacultyAdvisor2],
+        proposedFacultyCoAdvisor: [proposedFacultyCoAdvisor1, proposedFacultyCoAdvisor2],
+        proposedStudentRepresentative: [proposedStudentRepresentative1, proposedStudentRepresentative2],
+        proposedStudentJointRepresentative: [proposedStudentJointRepresentative1, proposedStudentJointRepresentative2],
+      },
+      { new: true, runValidators: true }
+    ).populate('proponentDepartment');
 
     if (!updatedClub) {
       return res.status(404).json({
@@ -164,14 +205,12 @@ exports.updateClubById = async (req, res) => {
       });
     }
 
-   
     return res.status(200).json({
       success: true,
       message: 'Club updated successfully',
       club: updatedClub,
     });
   } catch (error) {
-  
     return res.status(500).json({
       success: false,
       message: `Error updating club: ${error.message}`,
@@ -180,11 +219,12 @@ exports.updateClubById = async (req, res) => {
 };
 
 
+
 exports.deleteClubById = async (req, res) => {
   try {
     const { id } = req.params;
-
-
+    
+    
     if (!id) {
       return res.status(400).json({
         success: false,
@@ -192,9 +232,6 @@ exports.deleteClubById = async (req, res) => {
       });
     }
 
-   
-
- 
     const deletedClub = await Club.findByIdAndDelete(id);
 
   
