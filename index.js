@@ -15,14 +15,11 @@ const {databaseConnect}=require('./config/database');
 databaseConnect();
 
 
-const clusterRoutes=require('./routes/clustersRoutes');
-app.use('/api/clusterRoute',clusterRoutes);
+
 
 const departmentRoutes=require('./routes/departmentRoutes');
 app.use('/api/departmentRoutes',departmentRoutes);
 
-const instituteRoutes=require('./routes/instituteRoutes');
-app.use('/api/instituteRoutes',instituteRoutes);
 
 const clubRoutes=require('./routes/clubRoute');
 app.use('/api/clubRoutes',clubRoutes);

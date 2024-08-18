@@ -1,55 +1,84 @@
 const DepartmentalSocieties = require('../models/DepartmentalSocieties');
 const Department = require('../models/Department');
-const Cluster = require('../models/Cluster');
-const Institute=require('../models/Institute');
-const mongoose=require('mongoose');
-
 
 
 exports.createDepartmentalSociety = async (req, res) => {
   try {
-    const { name, department, institute, cluster } = req.body;
+    const {
+      ProposedSocietyName,
+      TypeOfEntity,
+      CategoryOfEntity,
+      ProposedBy,
+      proponentName,
+      proponentDepartment,
+      natureofEntity,
+      proposedFacultyAdvisor1,
+      proposedFacultyAdvisor2,
+      proposedFacultyCoAdvisor1,
+      proposedFacultyCoAdvisor2,
+      proposedStudentRepresentative1,
+      proposedStudentRepresentative2,
+      proposedStudentJointRepresentative1,
+      proposedStudentJointRepresentative2,
+      ProposedDate,
+    } = req.body;
 
-
-    if (!name || !department || !institute || !cluster) {
+    if (
+      !ProposedSocietyName ||
+      !TypeOfEntity ||
+      !CategoryOfEntity ||
+      !ProposedBy ||
+      !proponentName ||
+      !natureofEntity ||
+      !proponentDepartment ||
+      !proposedFacultyAdvisor1 ||
+      !proposedFacultyAdvisor2 ||
+      !proposedStudentRepresentative1 ||
+      !proposedStudentRepresentative2 ||
+      !proposedStudentJointRepresentative1 ||
+      !proposedStudentJointRepresentative2 ||
+      !proposedFacultyCoAdvisor1 ||
+      !proposedFacultyCoAdvisor2 ||
+      !ProposedDate
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required: name, department, institute, cluster',
+        message: 'All fields are required',
       });
     }
 
-    
-    const requiredDepartment = await Department.findOne({ name: department });
-    const requiredCluster = await Cluster.findOne({ name: cluster });
-    const requiredInstitute=await Institute.findOne({name:institute});
+    const requiredDepartment = await Department.findOne({ name: proponentDepartment });
 
+    if (requiredDepartment) {
+      const newSociety = new DepartmentalSocieties({
+        ProposedSocietyName,
+        TypeOfEntity,
+        CategoryOfEntity,
+        ProposedBy,
+        proponentName,
+        proponentDepartment: requiredDepartment._id,
+        natureofEntity,
+        proposedFacultyAdvisor: [proposedFacultyAdvisor1, proposedFacultyAdvisor2],
+        proposedFacultyCoAdvisor: [proposedFacultyCoAdvisor1, proposedFacultyCoAdvisor2],
+        proposedStudentRepresentative: [proposedStudentRepresentative1, proposedStudentRepresentative2],
+        proposedStudentJointRepresentative: [proposedStudentJointRepresentative1, proposedStudentJointRepresentative2],
+        ProposedDate,
+      });
 
-    if (!requiredDepartment || !requiredCluster || !requiredInstitute) {
+      const savedSociety = await newSociety.save();
+
+      return res.status(201).json({
+        success: true,
+        message: 'Departmental Society created successfully',
+        society: savedSociety,
+      });
+    } else {
       return res.status(404).json({
         success: false,
-        message: 'Either the department or cluster or institute is not valid',
+        message: 'Invalid department',
       });
     }
-
-    
-    const newSociety = new DepartmentalSocieties({
-      name,
-      department: requiredDepartment._id,
-      institute:requiredInstitute._id,
-      cluster: requiredCluster._id,
-    });
-
-
-    const savedSociety = await newSociety.save();
-
-  
-    return res.status(201).json({
-      success: true,
-      message: 'Departmental Society created successfully',
-      society: savedSociety,
-    });
   } catch (error) {
-    
     return res.status(500).json({
       success: false,
       message: `Error creating Departmental Society: ${error.message}`,
@@ -57,13 +86,9 @@ exports.createDepartmentalSociety = async (req, res) => {
   }
 };
 
-
 exports.findAllDepartmentalSocieties = async (req, res) => {
   try {
-  
-    const societies = await DepartmentalSocieties.find()
-      .populate('department')
-      .populate('cluster').populate('institute');
+    const societies = await DepartmentalSocieties.find().populate('proponentDepartment');
 
     return res.status(200).json({
       success: true,
@@ -71,7 +96,6 @@ exports.findAllDepartmentalSocieties = async (req, res) => {
       societies,
     });
   } catch (error) {
-   
     return res.status(500).json({
       success: false,
       message: `Error retrieving Departmental Societies: ${error.message}`,
@@ -79,24 +103,14 @@ exports.findAllDepartmentalSocieties = async (req, res) => {
   }
 };
 
-
 exports.findDepartmentalSocietyById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid Departmental Society ID format',
-      });
-    }
+    
 
- 
-    const society = await DepartmentalSocieties.findById(id)
-      .populate('department')
-      .populate('cluster').populate('institute');
+    const society = await DepartmentalSocieties.findById(id).populate('proponentDepartment');
 
-   
     if (!society) {
       return res.status(404).json({
         success: false,
@@ -104,14 +118,12 @@ exports.findDepartmentalSocietyById = async (req, res) => {
       });
     }
 
-    
     return res.status(200).json({
       success: true,
       message: 'Departmental Society retrieved successfully',
       society,
     });
   } catch (error) {
-   
     return res.status(500).json({
       success: false,
       message: `Error retrieving Departmental Society: ${error.message}`,
@@ -119,51 +131,56 @@ exports.findDepartmentalSocietyById = async (req, res) => {
   }
 };
 
-
 exports.updateDepartmentalSocietyById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, department, institute, cluster } = req.body;
+    const {
+      ProposedSocietyName,
+      CategoryOfEntity,
+      proposedFacultyAdvisor1,
+      proposedFacultyAdvisor2,
+      proposedFacultyCoAdvisor1,
+      proposedFacultyCoAdvisor2,
+      proposedStudentRepresentative1,
+      proposedStudentRepresentative2,
+      proposedStudentJointRepresentative1,
+      proposedStudentJointRepresentative2,
+    } = req.body;
 
-
-    
-
-   
-    if (!name || !department || !institute || !cluster) {
+    if (
+      !ProposedSocietyName ||
+      !CategoryOfEntity ||
+      !proposedFacultyAdvisor1 ||
+      !proposedFacultyAdvisor2 ||
+      !proposedStudentRepresentative1 ||
+      !proposedStudentRepresentative2 ||
+      !proposedStudentJointRepresentative1 ||
+      !proposedStudentJointRepresentative2 ||
+      !proposedFacultyCoAdvisor1 ||
+      !proposedFacultyCoAdvisor2
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required: name, department, institute, cluster',
+        message: 'All fields are required',
       });
     }
 
-   
-    const requiredDepartment = await Department.findOne({ name: department });
-    const requiredCluster = await Cluster.findOne({ name: cluster });
-    const requiredInstitute=await Institute.findOne({name:institute});
-
-
-    if (!requiredDepartment || !requiredCluster || !requiredInstitute) {
-      return res.status(404).json({
-        success: false,
-        message: 'Either the department or cluster or institute is not valid',
-      });
-    }
-
-   
     const updatedSociety = await DepartmentalSocieties.findByIdAndUpdate(
       id,
       {
-        name,
-        department: requiredDepartment._id,
-        institute:requiredInstitute._id,
-        cluster: requiredCluster._id,
+        ProposedSocietyName,
+        CategoryOfEntity,
+        proposedFacultyAdvisor: [proposedFacultyAdvisor1, proposedFacultyAdvisor2],
+        proposedFacultyCoAdvisor: [proposedFacultyCoAdvisor1, proposedFacultyCoAdvisor2],
+        proposedStudentRepresentative: [proposedStudentRepresentative1, proposedStudentRepresentative2],
+        proposedStudentJointRepresentative: [
+          proposedStudentJointRepresentative1,
+          proposedStudentJointRepresentative2,
+        ],
       },
-      { new: true, runValidators: true } 
-    )
-      .populate('department')
-      .populate('cluster').populate('institute');
+      { new: true, runValidators: true }
+    ).populate('proponentDepartment');
 
-  
     if (!updatedSociety) {
       return res.status(404).json({
         success: false,
@@ -171,14 +188,12 @@ exports.updateDepartmentalSocietyById = async (req, res) => {
       });
     }
 
-   
     return res.status(200).json({
       success: true,
       message: 'Departmental Society updated successfully',
       society: updatedSociety,
     });
   } catch (error) {
-    
     return res.status(500).json({
       success: false,
       message: `Error updating Departmental Society: ${error.message}`,
@@ -186,23 +201,13 @@ exports.updateDepartmentalSocietyById = async (req, res) => {
   }
 };
 
-
 exports.deleteDepartmentalSocietyById = async (req, res) => {
   try {
     const { id } = req.params;
 
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid Departmental Society ID format',
-      });
-    }
-
-
     const deletedSociety = await DepartmentalSocieties.findByIdAndDelete(id);
 
-  
     if (!deletedSociety) {
       return res.status(404).json({
         success: false,
@@ -216,7 +221,6 @@ exports.deleteDepartmentalSocietyById = async (req, res) => {
       society: deletedSociety,
     });
   } catch (error) {
-  
     return res.status(500).json({
       success: false,
       message: `Error deleting Departmental Society: ${error.message}`,
