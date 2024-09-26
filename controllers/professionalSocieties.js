@@ -1,12 +1,18 @@
 const ProfessionalSocieties = require('../models/ProfessionalSocieties');
 const Department = require('../models/Department');
+const Institute = require('../models/Institute');
+const Cluster = require('../models/Cluster');
+
 const mongoose = require('mongoose');
 
 exports.createProfessionalSociety = async (req, res) => {
   try {
     const {
-      ProposedSocietyName,
+      ProposedEntityName,
       TypeOfEntity,
+      EntityDepartment,
+      EntityInstitute,
+      EntityCluster,
       CategoryOfEntity,
       ProposedBy,
       proponentName,
@@ -25,10 +31,13 @@ exports.createProfessionalSociety = async (req, res) => {
 
     // Check if all required fields are present
     if (
-      !ProposedSocietyName ||
+      !ProposedEntityName ||
       !TypeOfEntity ||
       !CategoryOfEntity ||
       !ProposedBy ||
+      !EntityDepartment ||
+      !EntityInstitute ||
+      !EntityCluster ||
       !proponentName ||
       !natureofEntity ||
       !proponentDepartment ||
@@ -50,13 +59,20 @@ exports.createProfessionalSociety = async (req, res) => {
 
     // Find the department by name
     const requiredDepartment = await Department.findOne({ name: proponentDepartment });
+    const requiredEntityDepartment = await Department.findOne({ name: EntityDepartment });
+    const requiredEntityCluster = await Cluster.findOne({ name: EntityCluster });
+    const requiredInstitute = await Institute.findOne({ name: EntityInstitute });
+
 
     if (requiredDepartment) {
       const newSociety = new ProfessionalSocieties({
-        ProposedSocietyName,
+        ProposedEntityName,
         TypeOfEntity,
         CategoryOfEntity,
         ProposedBy,
+        EntityDepartment:requiredEntityDepartment._id,
+        EntityInstitute:requiredInstitute._id,
+        EntityCluster:requiredEntityCluster._id,
         proponentName,
         proponentDepartment: requiredDepartment._id,
         natureofEntity,
@@ -73,7 +89,7 @@ exports.createProfessionalSociety = async (req, res) => {
       return res.status(201).json({
         success: true,
         message: 'Professional Society created successfully',
-        society: savedSociety,
+        Entity: savedSociety,
       });
     } else {
       return res.status(404).json({
@@ -92,12 +108,12 @@ exports.createProfessionalSociety = async (req, res) => {
 exports.findAllProfessionalSocieties = async (req, res) => {
   try {
     // Retrieve all Professional Societies and populate the department reference
-    const societies = await ProfessionalSocieties.find().populate('proponentDepartment');
+    const societies = await ProfessionalSocieties.find().populate('proponentDepartment EntityDepartment EntityInstitute EntityCluster');
 
     return res.status(200).json({
       success: true,
       message: 'Professional Societies retrieved successfully',
-      societies,
+      Entity:societies,
     });
   } catch (error) {
     return res.status(500).json({
@@ -120,7 +136,7 @@ exports.findProfessionalSocietyById = async (req, res) => {
     }
 
     // Find the society by ID and populate the department reference
-    const society = await ProfessionalSocieties.findById(id).populate('proponentDepartment');
+    const society = await ProfessionalSocieties.findById(id).populate('proponentDepartment EntityDepartment EntityInstitute EntityCluster');
 
     if (!society) {
       return res.status(404).json({
@@ -132,7 +148,7 @@ exports.findProfessionalSocietyById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Professional Society retrieved successfully',
-      society,
+      Entity:society,
     });
   } catch (error) {
     return res.status(500).json({
@@ -192,7 +208,7 @@ exports.updateProfessionalSocietyById = async (req, res) => {
         ],
       },
       { new: true, runValidators: true }
-    ).populate('proponentDepartment');
+    ).populate('proponentDepartment EntityDepartment EntityInstitute EntityCluster');
 
     if (!updatedSociety) {
       return res.status(404).json({
@@ -204,7 +220,7 @@ exports.updateProfessionalSocietyById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Professional Society updated successfully',
-      society: updatedSociety,
+      Entity: updatedSociety,
     });
   } catch (error) {
     return res.status(500).json({
@@ -239,7 +255,7 @@ exports.deleteProfessionalSocietyById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Professional Society deleted successfully',
-      society: deletedSociety,
+      Entity: deletedSociety,
     });
   } catch (error) {
     return res.status(500).json({

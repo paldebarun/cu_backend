@@ -1,9 +1,22 @@
 const mongoose = require('mongoose');
 
 const Communities = new mongoose.Schema({
-    ProposedCommunityName: {
+    ProposedEntityName: {
         type: String,
         required: true
+    },
+
+    EntityDepartment:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Department"
+    },
+    EntityInstitute:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Institute"
+    },
+    EntityCluster:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Cluster"
     },
    
     TypeOfEntity: {

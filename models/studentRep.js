@@ -23,14 +23,6 @@ const StudentRep = new mongoose.Schema({
         type:String,
         require :true
     },
-    experience:{
-        type: Number,
-        require: true
-    },
-    achievements:{
-        type: [String],
-        require: true
-    },
     institute:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"Institute"

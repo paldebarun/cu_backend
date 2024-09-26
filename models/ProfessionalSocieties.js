@@ -1,9 +1,21 @@
 const mongoose = require('mongoose');
 
 const ProfessionalSocieties = new mongoose.Schema({
-    ProposedSocietyName: {
-        type: String,
-        required: true
+    ProposedEntityName:{
+        type:String,
+        require:true
+    },
+    EntityDepartment:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Department"
+    },
+    EntityInstitute:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Institute"
+    },
+    EntityCluster:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Cluster"
     },
     TypeOfEntity: {
         type: String,

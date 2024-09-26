@@ -1,104 +1,57 @@
-const Club = require('../models/club');
-const Department = require('../models/Department');
-const Communities = require('../models/Communities');
-const Cluster = require('../models/Cluster');
-const Institute = require('../models/Institute');
 const Faculty = require('../models/facultyAdvisor');
-const bcrypt = require('bcrypt'); 
+const bcrypt = require('bcrypt');
 
-exports.createFaculty = async (req, res) => {
+exports.createFaculty = async (req, res, requiredDepartment, requiredCluster, requiredInstitute, savedEntity) => {
   try {
     const {
-      institute,
-      name,
-      department,
-      eid,
-      phone,
-      emailId,
-      experience,
-      achievements,
-      entityType,
-      entityName,
-      cluster
+      proposedFacultyAdvisor,
+      proposedFacultyCoAdvisor
     } = req.body;
 
-    if (!name || !department || !entityType || !entityName || !eid || !phone || !emailId || !experience || !achievements || !cluster || !institute) {
+    if (!proposedFacultyAdvisor || !proposedFacultyCoAdvisor) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required: name, department, entity type, entity name, etc.',
+        message: 'Faculty advisors are required',
       });
     }
 
-    const requiredDepartment = await Department.findOne({ name: department });
-    const requiredCluster = await Cluster.findOne({ name: cluster });
-    const requiredInstitute = await Institute.findOne({ name: institute });
-    
-    if (!requiredDepartment || !requiredCluster || !requiredInstitute) {
-      return res.status(404).json({
-        success: false,
-        message: 'Either cluster, department, or institute is not valid.',
-      });
-    }
+    const advisors = [...proposedFacultyAdvisor, ...proposedFacultyCoAdvisor];
 
-    let requiredEntity;
-    if (entityType === "Club") {
-      requiredEntity = await Club.findOne({ name: entityName });
-    } else if (entityType === "Community") {
-      requiredEntity = await Communities.findOne({ name: entityName });
-    }
+    for (const advisor of advisors) {
+      let { ProposedFacultyAdvisorName, ProposedFacultyAdvisorEid,ProposedFacultyCoAdvisorEid, MobileNumber, emailId } = advisor;
+      var hashedPassword;
+      if(ProposedFacultyAdvisorEid){
+       hashedPassword = await bcrypt.hash(ProposedFacultyAdvisorEid, 10);
+      }
+      else{
 
-    if (!requiredEntity) {
-      return res.status(404).json({
-        success: false,
-        message: `${entityType} not found.`,
-      });
-    }
+        hashedPassword = await bcrypt.hash(ProposedFacultyCoAdvisorEid,10);
+        ProposedFacultyAdvisorEid = ProposedFacultyCoAdvisorEid;
+      }
 
-    const hashedPassword = await bcrypt.hash(eid, 10);
-
-    let newFaculty;
-    if (entityType === "Club") {
-      newFaculty = new Faculty({
-        name,
+      const newFaculty = new Faculty({
+        name:ProposedFacultyAdvisorName,
         department: requiredDepartment._id,
         institute: requiredInstitute._id,
         cluster: requiredCluster._id,
-        eid,
-        phone,
+        eid:ProposedFacultyAdvisorEid,
+        phone:MobileNumber,
         emailId,
-        experience,
-        achievements,
-        club: requiredEntity._id,
-        password: hashedPassword
+        club: savedEntity._id,
+        password: hashedPassword,
       });
-    } else {
-      newFaculty = new Faculty({
-        name,
-        department: requiredDepartment._id,
-        institute: requiredInstitute._id,
-        cluster: requiredCluster._id,
-        eid,
-        phone,
-        emailId,
-        experience,
-        achievements,
-        community: requiredEntity._id,
-        password: hashedPassword
-      });
+
+      await newFaculty.save();
     }
 
-    const savedFaculty = await newFaculty.save();
-
-    return res.status(201).json({
+    return{
       success: true,
-      message: 'Faculty created successfully',
-      faculty: savedFaculty,
-    });
-
+      message: 'Faculty advisor created successfully',
+    };
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: `Error creating faculty: ${error.message}`,
+      message: `Error creating Faculty advisor: ${error.message}`,
     });
-  }
+  } 
 };
