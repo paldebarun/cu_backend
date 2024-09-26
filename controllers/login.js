@@ -5,9 +5,9 @@ const bcrypt = require('bcrypt');
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { uid, password } = req.body;
     
-    let user = await StudentRep.findOne({ emailId:email });
+    let user = await StudentRep.findOne({ eid:uid });
     
     if (user && await bcrypt.compare(password, user.password)) {
       return res.status(200).json({

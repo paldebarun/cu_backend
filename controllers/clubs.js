@@ -1,5 +1,8 @@
 const Club = require('../models/club');
 const Department=require('../models/Department');
+const Institute=require('../models/Institute');
+const Cluster=require('../models/Cluster');
+
 
 const mongoose=require('mongoose');
 
@@ -7,10 +10,13 @@ const mongoose=require('mongoose');
 exports.createClub = async (req, res) => {
   try {
     const {
-      ProposedClubName,
+      ProposedEntityName,
       TypeOfEntity,
       CategoryOfEntity,
       ProposedBy,
+      EntityDepartment,
+      EntityInstitute,
+      EntityCluster,
       proponentName,
       proponentDepartment,
       natureofEntity,
@@ -27,22 +33,25 @@ exports.createClub = async (req, res) => {
 
   
     if (
-      !ProposedClubName ||
+      !ProposedEntityName ||
       !TypeOfEntity ||
       !CategoryOfEntity ||
       !ProposedBy ||
       !proponentName ||
-      !natureofEntity ||
       !proponentDepartment ||
+      !EntityDepartment ||
+      !EntityInstitute ||
+      !EntityCluster ||
+      !natureofEntity ||
       !proposedFacultyAdvisor1 ||
       !proposedFacultyAdvisor2 ||
       !proposedStudentRepresentative1 ||
       !proposedStudentRepresentative2 ||
-      !proposedStudentJointRepresentative1||
-      !proposedStudentJointRepresentative2||
-      !proposedFacultyCoAdvisor1||
+      !proposedStudentJointRepresentative1 ||
+      !proposedStudentJointRepresentative2 ||
+      !proposedFacultyCoAdvisor1 ||
       !proposedFacultyCoAdvisor2 ||
-      !ProposedDate 
+      !ProposedDate
      
     ) {
       return res.status(400).json({
@@ -52,18 +61,23 @@ exports.createClub = async (req, res) => {
     }
 
     const requiredDepartment = await Department.findOne({ name: proponentDepartment });
-    
+    const requiredClubDepartment=await Department.findOne({name:EntityDepartment});
+    const requiredClubCluster=await Cluster.findOne({name:EntityCluster});
+    const requiredInstitute =await Institute.findOne({name:EntityInstitute});
 
-    if ( requiredDepartment ) {
+
+    if ( requiredDepartment && requiredClubCluster && requiredClubDepartment && requiredInstitute ) {
       const newClub = new Club({
-        ProposedClubName,
+        ProposedEntityName,
         TypeOfEntity,
         CategoryOfEntity,
         ProposedBy,
         proponentName,
         proponentDepartment: requiredDepartment._id,
         natureofEntity,
-      
+        EntityDepartment:requiredClubDepartment._id,
+        EntityInstitute:requiredInstitute._id,
+        EntityCluster:requiredClubCluster._id,
         proposedFacultyAdvisor:[proposedFacultyAdvisor1,proposedFacultyAdvisor2],
         proposedFacultyCoAdvisor:[proposedFacultyCoAdvisor1,proposedFacultyCoAdvisor2],
         proposedStudentRepresentative:[proposedStudentRepresentative1,proposedStudentRepresentative2],
@@ -73,12 +87,12 @@ exports.createClub = async (req, res) => {
        
       });
 
-      const savedClub = await newClub.save();
+      const savedEntity = await newClub.save();
 
       return res.status(201).json({
         success: true,
         message: 'Club created successfully',
-        club: savedClub,
+        Entity: savedEntity,
       });
     } else {
       return res.status(404).json({
@@ -99,13 +113,13 @@ exports.createClub = async (req, res) => {
 exports.findAllClubs = async (req, res) => {
   try {
     
-    const clubs = await Club.find().populate('proponentDepartment');
+    const Entity = await Club.find().populate('proponentDepartment EntityDepartment EntityInstitute EntityCluster');
 
    
     return res.status(200).json({
       success: true,
       message: 'Clubs retrieved successfully',
-      clubs,
+      Entity,
     });
   } catch (error) {
     
@@ -129,7 +143,7 @@ exports.findClubById = async (req, res) => {
       });
     }
 
-    const club = await Club.findById(id).populate('proponentDepartment');
+    const Entity = await Club.findById(id).populate('proponentDepartment EntityDepartment EntityInstitute EntityCluster ');
 
 
     if (!club) {
@@ -143,7 +157,7 @@ exports.findClubById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Club retrieved successfully',
-      club,
+      Entity,
     });
   } catch (error) {
   
@@ -196,7 +210,7 @@ exports.updateClubById = async (req, res) => {
         proposedStudentJointRepresentative: [proposedStudentJointRepresentative1, proposedStudentJointRepresentative2],
       },
       { new: true, runValidators: true }
-    ).populate('proponentDepartment');
+    ).populate('proponentDepartment EntityDepartment EntityInstitute EntityCluster ');
 
     if (!updatedClub) {
       return res.status(404).json({
@@ -208,7 +222,7 @@ exports.updateClubById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Club updated successfully',
-      club: updatedClub,
+      Entity: updatedClub,
     });
   } catch (error) {
     return res.status(500).json({
@@ -246,7 +260,7 @@ exports.deleteClubById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Club deleted successfully',
-      club: deletedClub,
+      Entity: deletedClub,
     });
   } catch (error) {
     

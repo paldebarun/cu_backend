@@ -1,12 +1,17 @@
 const DepartmentalSocieties = require('../models/DepartmentalSocieties');
 const Department = require('../models/Department');
+const Institute=require('../models/Institute');
+const Cluster=require('../models/Cluster');
 
 
 exports.createDepartmentalSociety = async (req, res) => {
   try {
     const {
-      ProposedSocietyName,
+      ProposedEntityName,
       TypeOfEntity,
+      EntityDepartment,
+      EntityInstitute,
+      EntityCluster,
       CategoryOfEntity,
       ProposedBy,
       proponentName,
@@ -24,12 +29,15 @@ exports.createDepartmentalSociety = async (req, res) => {
     } = req.body;
 
     if (
-      !ProposedSocietyName ||
+      !ProposedEntityName ||
       !TypeOfEntity ||
       !CategoryOfEntity ||
       !ProposedBy ||
       !proponentName ||
       !natureofEntity ||
+      !EntityDepartment ||
+      !EntityInstitute ||
+      !EntityCluster ||
       !proponentDepartment ||
       !proposedFacultyAdvisor1 ||
       !proposedFacultyAdvisor2 ||
@@ -48,20 +56,29 @@ exports.createDepartmentalSociety = async (req, res) => {
     }
 
     const requiredDepartment = await Department.findOne({ name: proponentDepartment });
+    const requiredEntityDepartment = await Department.findOne({ name: EntityDepartment });
+    const requiredEntityCluster = await Cluster.findOne({ name: EntityCluster });
+    const requiredInstitute = await Institute.findOne({ name: EntityInstitute });
 
-    if (requiredDepartment) {
+    if (requiredDepartment && requiredDepartment && requiredEntityCluster && requiredInstitute) {
       const newSociety = new DepartmentalSocieties({
-        ProposedSocietyName,
+        ProposedEntityName,
         TypeOfEntity,
         CategoryOfEntity,
         ProposedBy,
         proponentName,
         proponentDepartment: requiredDepartment._id,
+        EntityDepartment:requiredEntityDepartment._id,
+        EntityInstitute:requiredInstitute._id,
+        EntityCluster:requiredEntityCluster._id,
         natureofEntity,
         proposedFacultyAdvisor: [proposedFacultyAdvisor1, proposedFacultyAdvisor2],
         proposedFacultyCoAdvisor: [proposedFacultyCoAdvisor1, proposedFacultyCoAdvisor2],
         proposedStudentRepresentative: [proposedStudentRepresentative1, proposedStudentRepresentative2],
-        proposedStudentJointRepresentative: [proposedStudentJointRepresentative1, proposedStudentJointRepresentative2],
+        proposedStudentJointRepresentative: [
+          proposedStudentJointRepresentative1,
+          proposedStudentJointRepresentative2,
+        ],
         ProposedDate,
       });
 
@@ -70,7 +87,7 @@ exports.createDepartmentalSociety = async (req, res) => {
       return res.status(201).json({
         success: true,
         message: 'Departmental Society created successfully',
-        society: savedSociety,
+        Entity: savedSociety,
       });
     } else {
       return res.status(404).json({
@@ -88,12 +105,11 @@ exports.createDepartmentalSociety = async (req, res) => {
 
 exports.findAllDepartmentalSocieties = async (req, res) => {
   try {
-    const societies = await DepartmentalSocieties.find().populate('proponentDepartment');
-
+    const societies = await DepartmentalSocieties.find().populate('proponentDepartment EntityDepartment EntityInstitute EntityCluster');
     return res.status(200).json({
       success: true,
       message: 'Departmental Societies retrieved successfully',
-      societies,
+      Entities:societies,
     });
   } catch (error) {
     return res.status(500).json({
@@ -106,8 +122,6 @@ exports.findAllDepartmentalSocieties = async (req, res) => {
 exports.findDepartmentalSocietyById = async (req, res) => {
   try {
     const { id } = req.params;
-
-    
 
     const society = await DepartmentalSocieties.findById(id).populate('proponentDepartment');
 
@@ -135,7 +149,7 @@ exports.updateDepartmentalSocietyById = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      ProposedSocietyName,
+      ProposedEntityName,
       CategoryOfEntity,
       proposedFacultyAdvisor1,
       proposedFacultyAdvisor2,
@@ -148,7 +162,7 @@ exports.updateDepartmentalSocietyById = async (req, res) => {
     } = req.body;
 
     if (
-      !ProposedSocietyName ||
+      !ProposedEntityName ||
       !CategoryOfEntity ||
       !proposedFacultyAdvisor1 ||
       !proposedFacultyAdvisor2 ||
@@ -168,7 +182,7 @@ exports.updateDepartmentalSocietyById = async (req, res) => {
     const updatedSociety = await DepartmentalSocieties.findByIdAndUpdate(
       id,
       {
-        ProposedSocietyName,
+        ProposedEntityName,
         CategoryOfEntity,
         proposedFacultyAdvisor: [proposedFacultyAdvisor1, proposedFacultyAdvisor2],
         proposedFacultyCoAdvisor: [proposedFacultyCoAdvisor1, proposedFacultyCoAdvisor2],
@@ -179,7 +193,7 @@ exports.updateDepartmentalSocietyById = async (req, res) => {
         ],
       },
       { new: true, runValidators: true }
-    ).populate('proponentDepartment');
+    ).populate('proponentDepartment EntityDepartment EntityInstitute EntityCluster');
 
     if (!updatedSociety) {
       return res.status(404).json({
@@ -191,7 +205,7 @@ exports.updateDepartmentalSocietyById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Departmental Society updated successfully',
-      society: updatedSociety,
+      Entity: updatedSociety,
     });
   } catch (error) {
     return res.status(500).json({
@@ -205,7 +219,6 @@ exports.deleteDepartmentalSocietyById = async (req, res) => {
   try {
     const { id } = req.params;
 
-
     const deletedSociety = await DepartmentalSocieties.findByIdAndDelete(id);
 
     if (!deletedSociety) {
@@ -218,7 +231,7 @@ exports.deleteDepartmentalSocietyById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Departmental Society deleted successfully',
-      society: deletedSociety,
+      Entity: deletedSociety,
     });
   } catch (error) {
     return res.status(500).json({

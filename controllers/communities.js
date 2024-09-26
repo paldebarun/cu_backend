@@ -1,16 +1,21 @@
 const Communities = require('../models/Communities');
 const Department = require('../models/Department');
-
+const Institute = require('../models/Institute');
+const Cluster = require('../models/Cluster');
+const mongoose = require('mongoose');
 
 exports.createCommunity = async (req, res) => {
   try {
     const {
-      ProposedCommunityName,
+      ProposedEntityName,
       TypeOfEntity,
       CategoryOfEntity,
       ProposedBy,
       proponentName,
       proponentDepartment,
+      EntityDepartment,
+      EntityInstitute,
+      EntityCluster,
       natureofEntity,
       proposedFacultyAdvisor1,
       proposedFacultyAdvisor2,
@@ -23,14 +28,18 @@ exports.createCommunity = async (req, res) => {
       ProposedDate,
     } = req.body;
 
+    // Check for required fields
     if (
-      !ProposedCommunityName ||
+      !ProposedEntityName ||
       !TypeOfEntity ||
       !CategoryOfEntity ||
       !ProposedBy ||
       !proponentName ||
-      !natureofEntity ||
       !proponentDepartment ||
+      !EntityDepartment ||
+      !EntityInstitute ||
+      !EntityCluster ||
+      !natureofEntity ||
       !proposedFacultyAdvisor1 ||
       !proposedFacultyAdvisor2 ||
       !proposedStudentRepresentative1 ||
@@ -47,21 +56,32 @@ exports.createCommunity = async (req, res) => {
       });
     }
 
+    // Fetch related entities from their respective models
     const requiredDepartment = await Department.findOne({ name: proponentDepartment });
+    const requiredCommunityDepartment = await Department.findOne({ name: EntityDepartment });
+    const requiredCommunityCluster = await Cluster.findOne({ name: EntityCluster });
+    const requiredInstitute = await Institute.findOne({ name: EntityInstitute });
 
-    if (requiredDepartment) {
+    // Check if related entities exist
+    if (requiredDepartment && requiredCommunityDepartment && requiredCommunityCluster && requiredInstitute) {
       const newCommunity = new Communities({
-        ProposedCommunityName,
+        ProposedEntityName,
         TypeOfEntity,
         CategoryOfEntity,
         ProposedBy,
         proponentName,
         proponentDepartment: requiredDepartment._id,
+        EntityDepartment: requiredCommunityDepartment._id,
+        EntityInstitute: requiredInstitute._id,
+        EntityCluster: requiredCommunityCluster._id,
         natureofEntity,
         proposedFacultyAdvisor: [proposedFacultyAdvisor1, proposedFacultyAdvisor2],
         proposedFacultyCoAdvisor: [proposedFacultyCoAdvisor1, proposedFacultyCoAdvisor2],
         proposedStudentRepresentative: [proposedStudentRepresentative1, proposedStudentRepresentative2],
-        proposedStudentJointRepresentative: [proposedStudentJointRepresentative1, proposedStudentJointRepresentative2],
+        proposedStudentJointRepresentative: [
+          proposedStudentJointRepresentative1,
+          proposedStudentJointRepresentative2,
+        ],
         ProposedDate,
       });
 
@@ -70,12 +90,12 @@ exports.createCommunity = async (req, res) => {
       return res.status(201).json({
         success: true,
         message: 'Community created successfully',
-        community: savedCommunity,
+        Entity: savedCommunity,
       });
     } else {
       return res.status(404).json({
         success: false,
-        message: 'Invalid department',
+        message: 'Either department, institute, or cluster is invalid',
       });
     }
   } catch (error) {
@@ -88,12 +108,11 @@ exports.createCommunity = async (req, res) => {
 
 exports.findAllCommunities = async (req, res) => {
   try {
-    const communities = await Communities.find().populate('proponentDepartment');
-
+    const Entity = await Communities.find().populate('proponentDepartment EntityDepartment EntityInstitute EntityCluster');
     return res.status(200).json({
       success: true,
       message: 'Communities retrieved successfully',
-      communities,
+      Entity,
     });
   } catch (error) {
     return res.status(500).json({
@@ -114,7 +133,7 @@ exports.findCommunityById = async (req, res) => {
       });
     }
 
-    const community = await Communities.findById(id).populate('proponentDepartment');
+    const community = await Communities.findById(id).populate('proponentDepartment EntityDepartment EntityInstitute EntityCluster');
 
     if (!community) {
       return res.status(404).json({
@@ -126,7 +145,7 @@ exports.findCommunityById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Community retrieved successfully',
-      community,
+      Entity:community,
     });
   } catch (error) {
     return res.status(500).json({
@@ -140,7 +159,7 @@ exports.updateCommunityById = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      ProposedCommunityName,
+      ProposedEntityName,
       CategoryOfEntity,
       proposedFacultyAdvisor1,
       proposedFacultyAdvisor2,
@@ -152,8 +171,15 @@ exports.updateCommunityById = async (req, res) => {
       proposedStudentJointRepresentative2,
     } = req.body;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid Community ID',
+      });
+    }
+
     if (
-      !ProposedCommunityName ||
+      !ProposedEntityName ||
       !CategoryOfEntity ||
       !proposedFacultyAdvisor1 ||
       !proposedFacultyAdvisor2 ||
@@ -173,7 +199,7 @@ exports.updateCommunityById = async (req, res) => {
     const updatedCommunity = await Communities.findByIdAndUpdate(
       id,
       {
-        ProposedCommunityName,
+        ProposedEntityName,
         CategoryOfEntity,
         proposedFacultyAdvisor: [proposedFacultyAdvisor1, proposedFacultyAdvisor2],
         proposedFacultyCoAdvisor: [proposedFacultyCoAdvisor1, proposedFacultyCoAdvisor2],
@@ -184,7 +210,7 @@ exports.updateCommunityById = async (req, res) => {
         ],
       },
       { new: true, runValidators: true }
-    ).populate('proponentDepartment');
+    ).populate('proponentDepartment EntityDepartment EntityInstitute EntityCluster');
 
     if (!updatedCommunity) {
       return res.status(404).json({
@@ -196,7 +222,7 @@ exports.updateCommunityById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Community updated successfully',
-      community: updatedCommunity,
+      Entity: updatedCommunity,
     });
   } catch (error) {
     return res.status(500).json({
@@ -229,7 +255,7 @@ exports.deleteCommunityById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Community deleted successfully',
-      community: deletedCommunity,
+      Entity: deletedCommunity,
     });
   } catch (error) {
     return res.status(500).json({

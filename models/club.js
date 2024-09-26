@@ -1,10 +1,23 @@
 const mongoose = require('mongoose');
 
 
+
 const Club=new mongoose.Schema({
-    ProposedClubName:{
+    ProposedEntityName:{
         type:String,
         require:true
+    },
+    EntityDepartment:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Department"
+    },
+    EntityInstitute:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Institute"
+    },
+    EntityCluster:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Cluster"
     },
     TypeOfEntity:{
      type:String,
