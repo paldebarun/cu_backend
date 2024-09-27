@@ -1,13 +1,15 @@
 const express=require('express');
 const app=express();
 const cors = require('cors');
+
+
 app.use(express.json());
+
 require('dotenv').config();
 
-app.use(cors({
-    credentials : true,
-    origin:true
-}));
+app.use(cors());
+
+
 const fileupload = require("express-fileupload");
 app.use(fileupload({
     useTempFiles : true,
@@ -46,6 +48,9 @@ app.use('/api/communitiesRoutes',communitiesRoutes);
 
 const studentRepRoutes=require('./routes/studentRepCreateRoutes');
 app.use('/api/studentRep',studentRepRoutes);
+
+const centralOffice=require('./routes/centralOfficeRoutes');
+app.use('/api/centralOffice',centralOffice);
 
 const facultyAdvRoutes=require('./routes/facultyAdvisorRoutes');
 app.use('/api/facultyAdv',facultyAdvRoutes);

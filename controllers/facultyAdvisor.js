@@ -102,3 +102,38 @@ exports.createFaculty = async (req, res) => {
     });
   }
 };
+
+
+exports.getFacultyById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    
+
+    // Find the faculty advisor by ID
+    const facultyAdvisor = await Faculty.findById(id)
+      .populate('department')
+      .populate('institute')
+      .populate('cluster')
+       // If it's associated with a community
+
+    // If no faculty advisor found
+    if (!facultyAdvisor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Faculty advisor not found',
+      });
+    }
+
+    // If faculty advisor is found
+    return res.status(200).json({
+      success: true,
+      facultyAdvisor,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `Error fetching faculty advisor: ${error.message}`,
+    });
+  }
+};

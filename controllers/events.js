@@ -109,6 +109,23 @@ exports.createEvent = async (req, res) => {
     }
 };
 
+exports.getAllEvents = async (req, res) => {
+    try {
+        const allEvents = await Event.find();  // Fetch all events from the database
+
+        return res.status(200).json({
+            success: true,
+            events: allEvents
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: `Error retrieving events: ${err.message}`,
+        });
+    }
+};
+
+
 exports.getMonthly = async (req, res) => {
     try {
         const currentDate = new Date();
@@ -222,6 +239,22 @@ exports.getFlagship = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: `Error retrieving flagship events: ${err.message}`,
+        });
+    }
+};
+
+exports.getUnapprovedEvents = async (req, res) => {
+    try {
+        const unapprovedEvents = await Event.find({ approval: false });  // Query for events with approval set to false
+
+        return res.status(200).json({
+            success: true,
+            events: unapprovedEvents
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: `Error retrieving unapproved events: ${err.message}`,
         });
     }
 };
