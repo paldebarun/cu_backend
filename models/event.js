@@ -9,7 +9,7 @@ const eventSchema = new Schema({
   imageUrl: {
     type: String,
     required: true 
-  },
+  }, 
   entity: {
     type: {
       type: String,

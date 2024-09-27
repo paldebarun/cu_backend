@@ -50,28 +50,32 @@ const Club=new mongoose.Schema({
         {
             ProposedFacultyAdvisorName:String,
             ProposedFacultyAdvisorEid:String,
-            MobileNumber:String
+            MobileNumber:String,
+            email : String
         }
     ],
     proposedFacultyCoAdvisor:[
         {
             ProposedFacultyCoAdvisorName:String,
             ProposedFacultyCoAdvisorEid:String,
-            MobileNumber:String
+            MobileNumber:String,
+            email : String
         }
     ],
     proposedStudentRepresentative:[
         {
             proposedStudentRepresentativeName:String,
             proposedStudentRepresentativeUid:String,
-            MobileNumber:String
+            MobileNumber:String,
+            email : String
         }
     ],
     proposedStudentJointRepresentative:[
         {
             proposedStudentRepresentativeName:String,
             proposedStudentRepresentativeUid:String,
-            MobileNumber:String
+            MobileNumber:String,
+            email : String
         }
     ],
     ProposedDate:{

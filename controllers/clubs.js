@@ -14,6 +14,7 @@ exports.createClub = async (req, res) => {
       TypeOfEntity,
       CategoryOfEntity,
       ProposedBy,
+   
       EntityDepartment,
       EntityInstitute,
       EntityCluster,
@@ -31,8 +32,9 @@ exports.createClub = async (req, res) => {
       ProposedDate,
     } = req.body;
 
-  
+    // Validating all required fields
     if (
+      !ProposedEntityName ||
       !ProposedEntityName ||
       !TypeOfEntity ||
       !CategoryOfEntity ||
@@ -43,10 +45,17 @@ exports.createClub = async (req, res) => {
       !EntityInstitute ||
       !EntityCluster ||
       !natureofEntity ||
+      !EntityDepartment ||
+      !EntityInstitute ||
+      !EntityCluster ||
+      !natureofEntity ||
       !proposedFacultyAdvisor1 ||
       !proposedFacultyAdvisor2 ||
       !proposedStudentRepresentative1 ||
       !proposedStudentRepresentative2 ||
+      !proposedStudentJointRepresentative1 ||
+      !proposedStudentJointRepresentative2 ||
+      !proposedFacultyCoAdvisor1 ||
       !proposedStudentJointRepresentative1 ||
       !proposedStudentJointRepresentative2 ||
       !proposedFacultyCoAdvisor1 ||
@@ -69,6 +78,7 @@ exports.createClub = async (req, res) => {
     if ( requiredDepartment && requiredClubCluster && requiredClubDepartment && requiredInstitute ) {
       const newClub = new Club({
         ProposedEntityName,
+        ProposedEntityName,
         TypeOfEntity,
         CategoryOfEntity,
         ProposedBy,
@@ -83,8 +93,6 @@ exports.createClub = async (req, res) => {
         proposedStudentRepresentative:[proposedStudentRepresentative1,proposedStudentRepresentative2],
         proposedStudentJointRepresentative:[proposedStudentJointRepresentative1,proposedStudentJointRepresentative2],
         ProposedDate,
-        
-       
       });
 
       const savedEntity = await newClub.save();
@@ -107,6 +115,7 @@ exports.createClub = async (req, res) => {
     });
   }
 };
+
 
 
 

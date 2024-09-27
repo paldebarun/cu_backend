@@ -1,5 +1,5 @@
 
-const   mongoose  = require('mongoose');
+const mongoose  = require('mongoose');
 const Cluster=require('../models/Cluster');
 
 

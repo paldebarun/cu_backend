@@ -108,10 +108,29 @@ exports.createEvent = async (req, res) => {
         });
     }
 };
-
-exports.getAllEvents = async (req, res) => {
+exports.allEvents = async (req,res)=>{
     try {
-        const allEvents = await Event.find();  // Fetch all events from the database
+        const currentDate = new Date();
+
+        const matchStage = { 
+            approval: false,
+            date: { $gte: currentDate }  // Only future events
+        };
+
+      
+
+        const allEvents = await Event.aggregate([
+            { $match: matchStage },
+            {
+                $addFields: {
+                    dateDifference: {
+                        $abs: { $subtract: [{ $toLong: "$date" }, { $toLong: currentDate }] }
+                    }
+                }
+            },
+            { $sort: { dateDifference: 1 } },  // Sort by the closest date first
+            { $limit: 5 }  // Limit to 3 events
+        ]);
 
         return res.status(200).json({
             success: true,
@@ -120,12 +139,10 @@ exports.getAllEvents = async (req, res) => {
     } catch (err) {
         return res.status(500).json({
             success: false,
-            message: `Error retrieving events: ${err.message}`,
+            message: `Error retrieving monthly events: ${err.message}`,
         });
     }
-};
-
-
+}
 exports.getMonthly = async (req, res) => {
     try {
         const currentDate = new Date();

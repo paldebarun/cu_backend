@@ -11,7 +11,7 @@ exports.cloudinaryConnect = () => {
             })
             console.log("cloudinary connected");
     }
-    catch(error) {
+    catch(error) { 
         console.log(error);
     }
-}
+} 
