@@ -122,35 +122,35 @@ app.use('/api/event', eventRoute);
 const memberRoute = require('./routes/members');
 app.use('/api/member',memberRoute);
 
-app.get('/api/me', verifyToken, async (req, res) => {
-   try {
-      const { id, role } = req.user;
-  
-      let user;
-      if (role === 'Student Rep') {
-        user = await StudentRep.findById(id);
-      } else if (role === 'Faculty') {
-        user = await Faculty.findById(id);
-      } else if (role === 'Central Office') {
-        user = await CentralOffice.findById(id);
+  app.get('/api/me', verifyToken, async (req, res) => {
+    try {
+        const { id, role } = req.user;
+    
+        let user;
+        if (role === 'Student Rep') {
+          user = await StudentRep.findById(id);
+        } else if (role === 'Faculty') {
+          user = await Faculty.findById(id);
+        } else if (role === 'Central Office') {
+          user = await CentralOffice.findById(id);
+        }
+    
+        if (!user) {
+          return res.status(404).json({ success: false, message: 'User not found' });
+        }
+    
+        return res.status(200).json({
+          success: true,
+          user: {
+            name: user.name || user.eid || user.uid,
+            role,
+            entity: user.club
+          },
+        });
+      } catch (error) {
+        return res.status(500).json({ success: false, message: `Server error: ${error.message}` });
       }
-  
-      if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
-      }
-  
-      return res.status(200).json({
-        success: true,
-        user: {
-          name: user.name || user.eid || user.uid,
-          role,
-          entity: user.club
-        },
-      });
-    } catch (error) {
-      return res.status(500).json({ success: false, message: `Server error: ${error.message}` });
-    }
-});
+  });
 
 app.get('/api/entity-counts', async (req, res) => {
   try {
