@@ -11,16 +11,15 @@ const mongoose = require("mongoose");
 exports.createEvent = async (req, res) => {
     try {
         const { 
-            name, 
-            entityType, 
-            entityName, 
-            organizerType, 
+            eventName, 
+            entity, 
+            organizerCategory, 
             organizerName, 
             startDate, 
             endDate, 
             venue, 
-            Eventtype, 
-            category, 
+            eventType, 
+            eventCategory, 
             organizationLevel, 
             budget 
         } = req.body;
@@ -33,28 +32,28 @@ exports.createEvent = async (req, res) => {
         const imageUrl = imageUploadResult.imageUrl;
 
         // Entity validation
-        let entity;
-        if (entityType === "club") {
-            entity = await Club.findOne({ ProposedClubName: entityName });
-        } else if (entityType === "community") {
-            entity = await Communities.findOne({ ProposedCommunityName: entityName });
-        } else if (entityType === "department-society") {
-            entity = await DepartmentalSocieties.findOne({ ProposedSocietyName: entityName });
-        } else if (entityType === "professional-society") {
-            entity = await ProfessionalSocieties.findOne({ ProposedSocietyName: entityName });
+        let entityType;
+        if (Club.findById(entity)) {
+            entityType = "club";
+        } else if (Communities.findById(entity)) {
+            entityType = "community";//department-society
+        } else if (await DepartmentalSocieties.findById(entity)) {
+            entityType="department-society";//professional-society
+        } else if (await ProfessionalSocieties.findById(entity)) {
+            entityType = "professional-society";
         }
-        if (!entity) {
+        if (!entityType) {
             return res.status(500).json({
                 success: false,
-                message: `${entityType} not found`,
+                message: `Entity not found`,
             });
         }
 
         // Organizer validation
         let organizer;
-        if (organizerType === "Cluster") {
+        if (organizerCategory === "Cluster") {
             organizer = await Cluster.findOne({ name: organizerName });
-        } else if (organizerType === "Department") {
+        } else if (organizerCategory === "Department") {
             organizer = await Department.findOne({ name: organizerName });
         } else {
             organizer = await Institute.findOne({ name: organizerName });
@@ -68,7 +67,7 @@ exports.createEvent = async (req, res) => {
 
         // Create event
         const newEvent = new Event({
-            name,
+            name:eventName,
             imageUrl,
             date: {
                 startDate: new Date(startDate),
@@ -76,15 +75,15 @@ exports.createEvent = async (req, res) => {
             },
             entity: {
                 type: entityType,
-                id: entity._id
+                id: entity  
             },
             organizer: {
-                type: organizerType,
+                type: organizerCategory,
                 id: organizer._id
             },
             venue,
-            Eventtype,
-            category,
+            Eventtype:eventType,
+            category:eventCategory,
             organizationLevel,
             budget
         });
@@ -195,6 +194,8 @@ exports.getTotalBudgetByEntity = async (req, res) => {
       }
   
       const { startOfMonth, endOfMonth } = getCurrentMonthRange();
+      console.log(startOfMonth);
+      console.log(endOfMonth);
       console.log(entityRef);
       const totalBudget = await Event.aggregate([
         {
