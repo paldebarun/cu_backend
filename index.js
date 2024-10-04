@@ -3,6 +3,8 @@ const app = express();
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 const Member = require('./models/Member');
+const Ticket = require('./models/Ticket');
+const {appliedSuccessfully} = require('./controllers/mail');
 app.use(express.json());
 require('dotenv').config();
 
@@ -250,10 +252,11 @@ async function validateOtp(email, otp) {
   }
 }
 
-app.post('/api/submit-form', async (req, res) => {
-  const { name, email, uid, otp, entityType, entityId } = req.body;
 
-  if (!name || !email || !uid || !otp || !entityType || !entityId) {
+app.post('/api/submit-form', async (req, res) => {
+  const { name, email, uid, otp, gender, entityType, entityId ,department} = req.body;
+
+  if (!name || !email || !uid || !otp || !entityType || !gender || !entityId) {
     return res.status(400).json({ message: 'All fields are required.' });
   }
 
@@ -285,18 +288,28 @@ app.post('/api/submit-form', async (req, res) => {
       return res.status(404).json({ message: 'Entity not found.' });
     }
 
+    const counter = await Ticket.findOneAndUpdate(
+      { entityType: entityType },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true } 
+    );
+
     const newMember = new Member({
       name,
       email,
-      uid, 
+      uid,
       entityType,
+      gender,
       entityRef: entity._id,
       otp,
-      otpExpiry: Date.now(), 
+      otpExpiry: Date.now(),
+      ticketNumber: counter.seq, 
+      department
     });
 
     await newMember.save();
-
+    const sendMail = await appliedSuccessfully(email,entityId,counter.seq);
+    
     return res.status(201).json({ message: 'Member successfully registered and pending approval.' });
   } catch (error) {
     console.error('Error creating member:', error);

@@ -21,7 +21,7 @@ exports.login = async (req, res) => {
       return res.status(200).json({
         success: true,
         message: "Logged in",
-        role: "Student Rep",
+        role: "Student Rep", 
         token,  
         user
       });
